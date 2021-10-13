@@ -1,34 +1,37 @@
-const http = require('http')
+var url = require('url');
+var http = require('http');
+
+var routes = {
+     '/api/parsetime' : function(urlObj){
+         var dt = new Date(urlObj.query.iso);
+         var ret = {
+            hour: dt.getHours(),
+            minute: dt.getMinutes(),
+            second: dt.getSeconds()
+         };
+        return JSON.stringify(ret);        
+     }, 
+     '/api/unixtime' : function(urlObj){
+         var dt = new Date(urlObj.query.iso);
+         var ret = {
+            unixtime: dt.getTime() 
+         };
+         return JSON.stringify(ret);
+     }
+};
+
+
+var srv = http.createServer(function(req, res){
+    var urlObj = url.parse(req.url,true);
+    var route = routes[urlObj.pathname];
+    if (route){
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(route);
+    } else {
+        res.writeHead(404);
+        res.end;
+    }
     
-function parsetime (time) {
-  return {
-    hour: time.getHours(),
-    minute: time.getMinutes(),
-    second: time.getSeconds()
-  }
-}
-
-function unixtime (time) {
-  return { unixtime: time.getTime() }
-}
-
-const server = http.createServer(function (req, res) {
-  const parsedUrl = new URL(req.url, 'http://example.com')
-  const time = new Date(parsedUrl.searchParams.get('iso'))
-  let result
-
-  if (/^\/api\/parsetime/.test(req.url)) {
-    result = parsetime(time)
-  } else if (/^\/api\/unixtime/.test(req.url)) {
-    result = unixtime(time)
-  }
-
-  if (result) {
-    res.writeHead(200, { 'Content-Type': 'application/json' })
-    res.end(JSON.stringify(result))
-  } else {
-    res.writeHead(404)
-    res.end()
-  }
-})
-server.listen(Number(process.argv[2]))
+});
+ 
+srv.listen(process.argv[2]);
